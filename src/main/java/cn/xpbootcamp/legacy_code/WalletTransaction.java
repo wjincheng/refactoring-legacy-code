@@ -1,7 +1,6 @@
 package cn.xpbootcamp.legacy_code;
 
 import cn.xpbootcamp.legacy_code.enums.STATUS;
-import cn.xpbootcamp.legacy_code.service.WalletService;
 import cn.xpbootcamp.legacy_code.service.WalletServiceImpl;
 import cn.xpbootcamp.legacy_code.utils.IdGenerator;
 import cn.xpbootcamp.legacy_code.utils.RedisDistributedLock;
@@ -45,7 +44,7 @@ public class WalletTransaction {
         if (isErrorWalletTransaction()) {
             throw new InvalidTransactionException("This is an invalid transaction");
         }
-        if (isWalletTransactionEnd()) {
+        if (isEndWalletTransaction()) {
             return true;
         }
         if (isNotGetLock()) {
@@ -57,10 +56,7 @@ public class WalletTransaction {
                 this.status = STATUS.EXPIRED;
                 return false;
             }
-            String walletTransactionId = new WalletServiceImpl()
-                .moveMoney(preAssignedId, buyerId, sellerId, amount);
-            if (walletTransactionId != null) {
-                this.walletTransactionId = walletTransactionId;
+            if (isMoveMoneySuccess()) {
                 this.status = STATUS.EXECUTED;
                 return true;
             } else {
@@ -72,6 +68,12 @@ public class WalletTransaction {
         }
     }
 
+    private boolean isMoveMoneySuccess() {
+        this.walletTransactionId = new WalletServiceImpl()
+            .moveMoney(preAssignedId, buyerId, sellerId, amount);
+        return walletTransactionId != null;
+    }
+
     private boolean isNotGetLock(){
         return !RedisDistributedLock.getSingletonInstance().lock(preAssignedId);
     }
@@ -80,7 +82,7 @@ public class WalletTransaction {
         return System.currentTimeMillis() - createdTimestamp > timeout;
     }
 
-    private boolean isWalletTransactionEnd(){
+    private boolean isEndWalletTransaction(){
         return status == STATUS.EXECUTED;
     }
 
