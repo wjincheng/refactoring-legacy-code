@@ -133,4 +133,36 @@ public class WalletTransactionTest {
         assertTrue(walletTransaction.execute());
     }
 
+    @Test
+    public void should_return_false_when_move_money_error() throws InvalidTransactionException{
+        String preAssignedId = "1";
+        Long buyerId = 1l;
+        Long sellerId = 1l;
+        Long productId = 1l;
+        String orderId = "1";
+
+        new MockUp<RedisDistributedLock>(RedisDistributedLock.class) {
+            @Mock
+            public boolean lock(String unit) {
+                return true;
+            }
+
+            @Mock
+            public void unlock(String unit) {
+            }
+        };
+
+        new MockUp<WalletServiceImpl>(WalletServiceImpl.class) {
+
+            @Mock
+            public String moveMoney(String id, long buyerId, long sellerId, double amount) {
+                return null;
+            }
+        };
+
+        WalletTransaction walletTransaction = new WalletTransaction(preAssignedId, buyerId, sellerId, productId, orderId);
+        walletTransaction.setAmount((double)1);
+        assertFalse(walletTransaction.execute());
+    }
+
 }
