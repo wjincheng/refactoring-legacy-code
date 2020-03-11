@@ -3,8 +3,6 @@ package cn.xpbootcamp.legacy_code;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import cn.xpbootcamp.legacy_code.enums.STATUS;
-import cn.xpbootcamp.legacy_code.service.WalletService;
 import cn.xpbootcamp.legacy_code.service.WalletServiceImpl;
 import cn.xpbootcamp.legacy_code.utils.RedisDistributedLock;
 import javax.transaction.InvalidTransactionException;
@@ -58,6 +56,7 @@ public class WalletTransactionTest {
         WalletTransaction walletTransaction = new WalletTransaction(preAssignedId, buyerId, sellerId, productId, orderId);
         walletTransaction.setAmount((double)1);
         assertFalse(walletTransaction.execute());
+//        assertEquals(walletTransaction.execute(), is(false));
     }
 
     @Test
@@ -130,6 +129,7 @@ public class WalletTransactionTest {
 
         WalletTransaction walletTransaction = new WalletTransaction(preAssignedId, buyerId, sellerId, productId, orderId);
         walletTransaction.setAmount((double)1);
+        assertTrue(walletTransaction.execute());
         assertTrue(walletTransaction.execute());
     }
 
