@@ -50,13 +50,11 @@ public class WalletTransaction {
         try {
             isLocked = RedisDistributedLock.getSingletonInstance().lock(preAssignedId);
 
-            // 锁定未成功，返回false
             if (!isLocked) {
                 return false;
             }
             long executionInvokedTimestamp = System.currentTimeMillis();
-            // 交易超过20天
-            if (executionInvokedTimestamp - createdTimestamp > timeout) {
+            if (isTimeout(executionInvokedTimestamp)) {
                 this.status = STATUS.EXPIRED;
                 return false;
             }
@@ -75,6 +73,10 @@ public class WalletTransaction {
                 RedisDistributedLock.getSingletonInstance().unlock(preAssignedId);
             }
         }
+    }
+
+    private boolean isTimeout(long executionInvokedTimestamp){
+        return executionInvokedTimestamp - createdTimestamp > timeout;
     }
 
     private boolean isWalletTransactionEnd(){
