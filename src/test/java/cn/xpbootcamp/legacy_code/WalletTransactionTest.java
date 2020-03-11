@@ -56,4 +56,45 @@ public class WalletTransactionTest {
         assertFalse(walletTransaction.execute());
     }
 
+    @Test
+    public void should_return_false_when_timeout_20_days() throws InvalidTransactionException{
+        String preAssignedId = "1";
+        Long buyerId = 1l;
+        Long sellerId = 1l;
+        Long productId = 1l;
+        String orderId = "1";
+
+        new MockUp<RedisDistributedLock>(RedisDistributedLock.class) {
+            @Mock
+            public boolean lock(String unit) {
+                return true;
+            }
+
+            @Mock
+            public void unlock(String unit) {
+            }
+        };
+
+        new MockUp<System>(System.class) {
+            @Mock
+            @SuppressWarnings("unused")
+            long currentTimeMillis() {
+                return 0L;
+            }
+        };
+
+        WalletTransaction walletTransaction = new WalletTransaction(preAssignedId, buyerId, sellerId, productId, orderId);
+
+        new MockUp<System>(System.class) {
+            @Mock
+            @SuppressWarnings("unused")
+            long currentTimeMillis() {
+                return 17280000000l;
+            }
+        };
+
+        walletTransaction.setAmount((double)1);
+        assertFalse(walletTransaction.execute());
+    }
+
 }
