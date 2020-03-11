@@ -74,4 +74,7 @@ public class WalletTransaction {
         }
     }
 
+    public void setAmount(Double amount){
+        this.amount = amount;
+    }
 }

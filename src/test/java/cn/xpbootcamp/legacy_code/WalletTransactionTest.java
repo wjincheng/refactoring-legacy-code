@@ -4,16 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import cn.xpbootcamp.legacy_code.utils.RedisDistributedLock;
 import javax.transaction.InvalidTransactionException;
-import mockit.Expectations;
 import mockit.Mock;
-import mockit.Mocked;
+import mockit.MockUp;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class WalletTransactionTest {
-
-    @Mocked
-    RedisDistributedLock redisDistributedLock;
 
     @Test
     public void should_throw_except_when_buyerId_is_null() {
@@ -38,17 +34,16 @@ public class WalletTransactionTest {
         Long sellerId = 1l;
         Long productId = 1l;
         String orderId = "1";
-        new Expectations() {
-            {
-                RedisDistributedLock.getSingletonInstance();
-                result = redisDistributedLock;
 
-                redisDistributedLock.lock(preAssignedId);
-                result = false;
+        new MockUp<RedisDistributedLock>(RedisDistributedLock.class) {
+            @Mock
+            public boolean lock(String unit) {
+                return false;
             }
         };
 
         WalletTransaction walletTransaction = new WalletTransaction(preAssignedId, buyerId, sellerId, productId, orderId);
+        walletTransaction.setAmount((double)1);
         assertFalse(walletTransaction.execute());
     }
 
