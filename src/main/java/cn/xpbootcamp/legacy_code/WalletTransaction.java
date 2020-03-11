@@ -53,13 +53,11 @@ public class WalletTransaction {
         }
 
         try {
-            long executionInvokedTimestamp = System.currentTimeMillis();
-            if (isTimeout(executionInvokedTimestamp)) {
+            if (isTimeout()) {
                 this.status = STATUS.EXPIRED;
                 return false;
             }
-            WalletService walletService = new WalletServiceImpl();
-            String walletTransactionId = walletService
+            String walletTransactionId = new WalletServiceImpl()
                 .moveMoney(preAssignedId, buyerId, sellerId, amount);
             if (walletTransactionId != null) {
                 this.walletTransactionId = walletTransactionId;
@@ -78,8 +76,8 @@ public class WalletTransaction {
         return !RedisDistributedLock.getSingletonInstance().lock(preAssignedId);
     }
 
-    private boolean isTimeout(long executionInvokedTimestamp){
-        return executionInvokedTimestamp - createdTimestamp > timeout;
+    private boolean isTimeout(){
+        return System.currentTimeMillis() - createdTimestamp > timeout;
     }
 
     private boolean isWalletTransactionEnd(){
