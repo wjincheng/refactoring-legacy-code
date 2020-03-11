@@ -19,6 +19,8 @@ public class WalletTransaction {
     private STATUS status;
     private String walletTransactionId;
 
+    private static long timeout = 1728000000;
+    private static String header = "t_";
 
     public WalletTransaction(String preAssignedId, Long buyerId, Long sellerId, Long productId, String orderId) {
         if (preAssignedId != null && !preAssignedId.isEmpty()) {
@@ -26,8 +28,8 @@ public class WalletTransaction {
         } else {
             this.id = IdGenerator.generateTransactionId();
         }
-        if (!this.id.startsWith("t_")) {
-            this.id = "t_" + preAssignedId;
+        if (!this.id.startsWith(header)) {
+            this.id = header + preAssignedId;
         }
         this.buyerId = buyerId;
         this.sellerId = sellerId;
@@ -41,7 +43,9 @@ public class WalletTransaction {
         if (buyerId == null || (sellerId == null || amount < 0.0)) {
             throw new InvalidTransactionException("This is an invalid transaction");
         }
-        if (status == STATUS.EXECUTED) return true;
+        if (status == STATUS.EXECUTED) {
+            return true;
+        }
         boolean isLocked = false;
         try {
             isLocked = RedisDistributedLock.getSingletonInstance().lock(id);
@@ -50,10 +54,12 @@ public class WalletTransaction {
             if (!isLocked) {
                 return false;
             }
-            if (status == STATUS.EXECUTED) return true; // double check
+            if (status == STATUS.EXECUTED) {
+                return true;
+            }
             long executionInvokedTimestamp = System.currentTimeMillis();
             // 交易超过20天
-            if (executionInvokedTimestamp - createdTimestamp > 1728000000) {
+            if (executionInvokedTimestamp - createdTimestamp > timeout) {
                 this.status = STATUS.EXPIRED;
                 return false;
             }
