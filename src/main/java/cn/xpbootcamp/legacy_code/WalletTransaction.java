@@ -9,7 +9,7 @@ import cn.xpbootcamp.legacy_code.utils.RedisDistributedLock;
 import javax.transaction.InvalidTransactionException;
 
 public class WalletTransaction {
-    private String id;
+    private String preAssignedId;
     private Long buyerId;
     private Long sellerId;
     private Long productId;
@@ -24,12 +24,12 @@ public class WalletTransaction {
 
     public WalletTransaction(String preAssignedId, Long buyerId, Long sellerId, Long productId, String orderId) {
         if (preAssignedId != null && !preAssignedId.isEmpty()) {
-            this.id = preAssignedId;
+            this.preAssignedId = preAssignedId;
         } else {
-            this.id = IdGenerator.generateTransactionId();
+            this.preAssignedId = IdGenerator.generateTransactionId();
         }
-        if (!this.id.startsWith(header)) {
-            this.id = header + preAssignedId;
+        if (!this.preAssignedId.startsWith(header)) {
+            this.preAssignedId = header + preAssignedId;
         }
         this.buyerId = buyerId;
         this.sellerId = sellerId;
@@ -48,7 +48,7 @@ public class WalletTransaction {
         }
         boolean isLocked = false;
         try {
-            isLocked = RedisDistributedLock.getSingletonInstance().lock(id);
+            isLocked = RedisDistributedLock.getSingletonInstance().lock(preAssignedId);
 
             // 锁定未成功，返回false
             if (!isLocked) {
@@ -64,7 +64,7 @@ public class WalletTransaction {
                 return false;
             }
             WalletService walletService = new WalletServiceImpl();
-            String walletTransactionId = walletService.moveMoney(id, buyerId, sellerId, amount);
+            String walletTransactionId = walletService.moveMoney(preAssignedId, buyerId, sellerId, amount);
             if (walletTransactionId != null) {
                 this.walletTransactionId = walletTransactionId;
                 this.status = STATUS.EXECUTED;
@@ -75,7 +75,7 @@ public class WalletTransaction {
             }
         } finally {
             if (isLocked) {
-                RedisDistributedLock.getSingletonInstance().unlock(id);
+                RedisDistributedLock.getSingletonInstance().unlock(preAssignedId);
             }
         }
     }
