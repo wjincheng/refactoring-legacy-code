@@ -28,6 +28,15 @@ public class WalletTransactionTest {
     }
 
     @Test
+    public void should_throw_except_when_amount_less_than_zero() throws InvalidTransactionException{
+        WalletTransaction walletTransaction = new WalletTransaction("1", 1l, 1l, 1l, "1");
+        walletTransaction.setAmount((double) -1);
+        Assertions.assertThrows(InvalidTransactionException.class, ()->{
+            walletTransaction.execute();
+        });
+    }
+
+    @Test
     public void should_return_false_when_lock_error() throws InvalidTransactionException{
         String preAssignedId = "1";
         Long buyerId = 1l;
