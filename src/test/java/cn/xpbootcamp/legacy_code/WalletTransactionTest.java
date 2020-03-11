@@ -1,7 +1,11 @@
 package cn.xpbootcamp.legacy_code;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import cn.xpbootcamp.legacy_code.enums.STATUS;
+import cn.xpbootcamp.legacy_code.service.WalletService;
+import cn.xpbootcamp.legacy_code.service.WalletServiceImpl;
 import cn.xpbootcamp.legacy_code.utils.RedisDistributedLock;
 import javax.transaction.InvalidTransactionException;
 import mockit.Mock;
@@ -95,6 +99,38 @@ public class WalletTransactionTest {
 
         walletTransaction.setAmount((double)1);
         assertFalse(walletTransaction.execute());
+    }
+
+    @Test
+    public void should_return_true() throws InvalidTransactionException{
+        String preAssignedId = "1";
+        Long buyerId = 1l;
+        Long sellerId = 1l;
+        Long productId = 1l;
+        String orderId = "1";
+
+        new MockUp<RedisDistributedLock>(RedisDistributedLock.class) {
+            @Mock
+            public boolean lock(String unit) {
+                return true;
+            }
+
+            @Mock
+            public void unlock(String unit) {
+            }
+        };
+
+        new MockUp<WalletServiceImpl>(WalletServiceImpl.class) {
+
+            @Mock
+            public String moveMoney(String id, long buyerId, long sellerId, double amount) {
+                return "1";
+            }
+        };
+
+        WalletTransaction walletTransaction = new WalletTransaction(preAssignedId, buyerId, sellerId, productId, orderId);
+        walletTransaction.setAmount((double)1);
+        assertTrue(walletTransaction.execute());
     }
 
 }
